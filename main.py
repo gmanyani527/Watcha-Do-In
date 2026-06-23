@@ -6,39 +6,39 @@ from pydantic import BaseModel, Field
 
 
 class TicketmasterParams(BaseModel):
-  keyword: list[str]
-  classificationName: str
-  city: str
-  stateCode: str
-  localStartDateTime: list[str]
+        keyword: list[str]
+        classificationName: str
+        city: str
+        stateCode: str
+        localStartDateTime: list[str]
 
 
 class GoogleEventsParams(BaseModel):
-    q: str
-    location: str
+        q: str
+        location: str
 
 
 class EventSearch(BaseModel):
-    ticketmaster: TicketmasterParams
-    google_events: GoogleEventsParams
+        ticketmaster: TicketmasterParams
+        google_events: GoogleEventsParams
 
 
 genai_key = os.getenv('GENAI_KEY')
 genai.api_key = genai_key
 
 client = genai.Client(
-    api_key=genai_key,
+        api_key=genai_key,
 )
 
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
-    config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=EventSearch.model_json_schema()
+        model="gemini-2.5-flash",
+        config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=EventSearch.model_json_schema()
     ),
-    contents=(
-      "I like dancing and learning new cultures "
-      "through music and I live in New York"),
+        contents=(
+                "I like dancing and learning new cultures "
+                "through music and I live in New York"),
 )
 
 events = response.text

@@ -16,5 +16,4 @@ jobs:
         run: python -m pip install --upgrade pip pytest
 
       - name: Test with unittest
-        working-directory: ./Watcha-Do-In
         run: python3 -m unittest tests.py

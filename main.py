@@ -1,7 +1,9 @@
-import os, json
+import os
+import json
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
+
 
 class TicketmasterParams(BaseModel):
   keyword: list[str]
@@ -10,17 +12,18 @@ class TicketmasterParams(BaseModel):
   stateCode: str
   localStartDateTime: list[str]
 
+
 class GoogleEventsParams(BaseModel):
-  q: str
-  location: str
+    q: str
+    location: str
+
 
 class EventSearch(BaseModel):
-  ticketmaster: TicketmasterParams
-  google_events: GoogleEventsParams
+    ticketmaster: TicketmasterParams
+    google_events: GoogleEventsParams
 
 
 genai_key = os.getenv('GENAI_KEY')
-
 genai.api_key = genai_key
 
 client = genai.Client(
@@ -33,7 +36,9 @@ response = client.models.generate_content(
         response_mime_type="application/json",
         response_schema=EventSearch.model_json_schema()
     ),
-    contents="I like dancing and learning new cultures through music and I live in New York",
+    contents=(
+      "I like dancing and learning new cultures "
+      "through music and I live in New York"),
 )
 
 events = response.text

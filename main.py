@@ -45,8 +45,8 @@ response = client.models.generate_content(
 events = response.text
 search_terms = json.loads(events)
 
-print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
-print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
-print(f"Google Events Query: {search_terms['google_events']['q']}")
+#print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
+#print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
+#print(f"Google Events Query: {search_terms['google_events']['q']}")
 
 google_events = fetch_google_events(search_terms['google_events']['q'])

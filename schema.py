@@ -3,6 +3,21 @@ pd.set_option('display.max_colwidth', None)
 import sqlalchemy as db
 from main import google_events
 
+def normalize_and_save(events, source, engine):
+    if not events:
+      print("No events found.")
+      return
+
+    cleaned_events = []
+
+    for event in events:
+      if source == 'google':
+        cleaned_events = {
+          "title": event.get("title")
+          "date": str(event.get("date"))
+,
+          "address": str(event.get("address"))
+          "description":         }
 if not google_events:
     print("No events found.")
 else:

@@ -3,6 +3,7 @@ import json
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
+from google_events import fetch_google_events
 
 
 class TicketmasterParams(BaseModel):
@@ -47,3 +48,5 @@ search_terms = json.loads(events)
 print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
 print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
 print(f"Google Events Query: {search_terms['google_events']['q']}")
+
+google_events = fetch_google_events(search_terms['google_events']['q'])

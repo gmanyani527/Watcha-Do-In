@@ -1,13 +1,20 @@
 import serpapi
 import os
-from main import search_terms
+import json
 
-serpapi_key = os.getenv('SERPAPI_KEY')
+def fetch_google_events(query):
+  serpapi_key = os.getenv('SERPAPI_KEY')
 
-client = serpapi.Client(api_key=serpapi_key)
-results = client.search({
-  "engine": "google_events",
-  "q": search_terms['google_events']['q']
-})
-events_results = results["events_results"]
-print(events_results)
+  client = serpapi.Client(api_key=serpapi_key)
+  results = client.search({
+    "engine": "google_events",
+    "q": query
+  })
+  events_results = results.get("events_results", [])
+
+  for event in events_results:
+      for key, value in event.items():
+          if isinstance(value, (dict, list)):
+              event[key] = json.dumps(value)
+
+  return events_results

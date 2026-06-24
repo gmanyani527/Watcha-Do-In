@@ -1,9 +1,12 @@
 import os
 import json
+import pandas as pd
+import sqlalchemy as db
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 from google_events import fetch_google_events
+from schema import normalize_and_save
 
 
 class TicketmasterParams(BaseModel):
@@ -50,3 +53,10 @@ search_terms = json.loads(events)
 #print(f"Google Events Query: {search_terms['google_events']['q']}")
 
 google_events = fetch_google_events(search_terms['google_events']['q'])
+
+engine = db.create_engine('sqlite:///events.db')
+normalize_and_save(google_events, 'google', engine)
+
+with engine.connect() as connection:
+    query_result = connection.execute(db.text("SELECT * FROM events;")).fetchall()
+    print(pd.DataFrame(query_result))

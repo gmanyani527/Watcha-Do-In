@@ -1,5 +1,7 @@
 import os
 import json
+from dotenv import load_dotenv
+from ticketmaster import get_events
 import ast
 import pandas as pd
 import sqlalchemy as db
@@ -9,7 +11,7 @@ from pydantic import BaseModel, Field
 from google_events import fetch_google_events
 from schema import normalize_and_save
 
-
+load_dotenv()
 class TicketmasterParams(BaseModel):
     keyword: list[str]
     classificationName: str
@@ -33,6 +35,7 @@ print("*" * 60)
 
 user_input = input("\n What kind of events are you looking for? ")
 print("\n[1/4] Analyzing user intent...")
+
 
 genai_key = os.getenv('GENAI_KEY')
 genai.api_key = genai_key
@@ -94,4 +97,25 @@ with engine.connect() as connection:
         print(f" WHERE: {row['address']}")
         print("-" * 60)
 
+print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
+print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
+print(f"Google Events Query: {search_terms['google_events']['q']}")
+
+ticketmaster_keywords = search_terms["ticketmaster"]["keyword"]
+ticketmaster_city = search_terms["ticketmaster"]["city"]
+
+ticketmaster_results = get_events(
+  ticketmaster_keywords[0],
+  ticketmaster_city
+)
+if ticketmaster_results and "_embedded" in ticketmaster_results:
+  for event in ticketmaster_results["_embedded"]["events"]:
+    print(f"Name: {event['name']}")
+    print(f"Date: {event['dates']['start'].get('localDate', 'N/A')}")
+    print(f"Venue: {event['_embedded']['venues'][0]['names']}")
+    print(f"City: {event['_embedded']['venues'][0]['city']['name']}")
+    print(f"URL: {event['url']}")
+else:
+  print("No Ticketmaster events found")
+  
 print("Thanks for using WATCHA DO-IN")

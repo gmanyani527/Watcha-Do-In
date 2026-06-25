@@ -55,23 +55,28 @@ response = client.models.generate_content(
 
 events = response.text
 search_terms = json.loads(events)
+
 google_query = search_terms['google_events']['q']
 google_loc = search_terms['google_events']['location']
-combined_query = f"{google_query} in {google_loc}"
 
-print(f"\n ↳ Translated into Search Query: {combined_query}")
-print("[2/4] Fetching live data from Google Events API")
+tm_keywords = search_terms["ticketmaster"]["keyword"]
+tm_keyword = tm_keywords[0] if tm_keywords else "music"
+tm_city = search_terms["ticketmaster"]["city"]
 
-#print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
-#print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
-#print(f"Google Events Query: {search_terms['google_events']['q']}")
+print(f"\n ↳ Translated into Google Events Query: {google_query}")
+print(f"\n ↳ Translated into Ticketmaster Query: {tm_keyword}")
+print("[2/4] Fetching live data from APIs...")
 
-google_events = fetch_google_events(combined_query)
-print(f"Found {len(google_events)} events!")
+google_events = fetch_google_events(google_query)
+tm_response = get_events(tm_keyword, tm_city)
+tm_events = tm_response.get('_embedded', {}).get('events', []) if tm_response else []
+
+print(f"Found {len(google_events)} Google events and {len(tm_events)} Ticketmaster events!")
 print("[3/4] Normalizing data and caching to DB...")
 
 engine = db.create_engine('sqlite:///events.db')
-normalize_and_save(google_events, 'google', engine)
+normalize_and_save(google_events, 'google', engine, google_query)
+normalize_and_save(tm_events, 'ticketmaster', engine, google_query)
 
 print("[4/4] Here are your personalized results!")
 print("=" * 60)
@@ -95,27 +100,7 @@ with engine.connect() as connection:
         print(f" EVENT: {row['title']}")
         print(f" WHEN:  {date_info}")
         print(f" WHERE: {row['address']}")
+        print(f" LINK: {row.get('url', 'N/A')}")
         print("-" * 60)
-
-print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
-print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
-print(f"Google Events Query: {search_terms['google_events']['q']}")
-
-ticketmaster_keywords = search_terms["ticketmaster"]["keyword"]
-ticketmaster_city = search_terms["ticketmaster"]["city"]
-
-ticketmaster_results = get_events(
-  ticketmaster_keywords[0],
-  ticketmaster_city
-)
-if ticketmaster_results and "_embedded" in ticketmaster_results:
-  for event in ticketmaster_results["_embedded"]["events"]:
-    print(f"Name: {event['name']}")
-    print(f"Date: {event['dates']['start'].get('localDate', 'N/A')}")
-    print(f"Venue: {event['_embedded']['venues'][0]['names']}")
-    print(f"City: {event['_embedded']['venues'][0]['city']['name']}")
-    print(f"URL: {event['url']}")
-else:
-  print("No Ticketmaster events found")
   
 print("Thanks for using WATCHA DO-IN")

@@ -1,5 +1,6 @@
 import os
 import json
+import ast
 import pandas as pd
 import sqlalchemy as db
 from google import genai
@@ -52,15 +53,17 @@ response = client.models.generate_content(
 events = response.text
 search_terms = json.loads(events)
 google_query = search_terms['google_events']['q']
+google_loc = search_terms['google_events']['location']
+combined_query = f"{google_query} in {google_loc}"
 
-print(f"/n ↳ Translated into Search Query: {google_query}")
+print(f"\n ↳ Translated into Search Query: {combined_query}")
 print("[2/4] Fetching live data from Google Events API")
 
 #print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
 #print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
 #print(f"Google Events Query: {search_terms['google_events']['q']}")
 
-google_events = fetch_google_events(search_terms['google_events']['q'])
+google_events = fetch_google_events(combined_query)
 print(f"Found {len(google_events)} events!")
 print("[3/4] Normalizing data and caching to DB...")
 

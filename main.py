@@ -132,7 +132,11 @@ while True:
     print("=" * 60)
 
     with engine.connect() as connection:
-        query_result = connection.execute(db.text("SELECT * FROM events;")).fetchall()
+      tables = db.inspect(engine).get_table_names()
+
+      if 'events' in tables:
+        query = db.text("SELECT * FROM events WHERE search_term = :term")
+        query_result = connection.execute(query, {"term": search_term_lower}).fetchall()
         df = pd.DataFrame(query_result)
 
   if df.empty:

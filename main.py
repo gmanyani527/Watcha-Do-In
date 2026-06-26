@@ -78,17 +78,34 @@ while True:
 
   print("\n[1/4] Analyzing user intent...")
 
-  response = client.models.generate_content(
-      model="gemini-2.5-flash",
-          config=types.GenerateContentConfig(
-          response_mime_type="application/json",
-          response_schema=EventSearch.model_json_schema()
-      ),
-      contents=user_input,
-  )
+  try:
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+            config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=EventSearch.model_json_schema()
+        ),
+        contents=user_input,
+    )
 
-  events = response.text
-  search_terms = json.loads(events)
+    events = response.text
+    search_terms = json.loads(events)
+  except Exception as e:
+    print("Gemini is experiencing usage spikes. Switching to fallback demo mode.")
+
+    search_terms = {
+        "google_events": {
+            "q": "dancing in NYC",
+            "location": "New York"
+        },
+        "ticketmaster": {
+            "keyword": ["dance"],
+            "classificationName": "Music",
+            "city": "New York",
+            "stateCode": "NY",
+            "localStartDateTime": []
+        }
+    }
 
   google_query = search_terms['google_events']['q']
   google_loc = search_terms['google_events']['location']

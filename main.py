@@ -29,13 +29,36 @@ class EventSearch(BaseModel):
     ticketmaster: TicketmasterParams
     google_events: GoogleEventsParams
 
-print("*" * 60)
-print("Welcome to WATCHA DO-IN!")
-print("*" * 60)
+title = r"""                                                                                                                                  
+                                                                                                                                  
+                             ___                ,---,                                                                             
+                           ,--.'|_            ,--.' |                              ,---,                      ,--,                
+         .---.             |  | :,'           |  |  :                            ,---.'|   ,---.      ,---,.,--.'|         ,---,  
+        /. ./|             :  : ' :           :  :  :                            |   | :  '   ,'\   ,'  .' ||  |,      ,-+-. /  | 
+     .-'-. ' |  ,--.--.  .;__,'  /     ,---.  :  |  |,--.  ,--.--.               |   | | /   /   |,---.'   ,`--'_     ,--.'|'   | 
+    /___/ \: | /       \ |  |   |     /     \ |  :  '   | /       \            ,--.__| |.   ; ,. :|   |    |,' ,'|   |   |  ,"' | 
+ .-'.. '   ' ..--.  .-. |:__,'| :    /    / ' |  |   /' :.--.  .-. |          /   ,'   |'   | |: ::   :  .' '  | |   |   | /  | | 
+/___/ \:     ' \__\/: . .  '  : |__ .    ' /  '  :  | | | \__\/: . .         .   '  /  |'   | .; ::   |.'   |  | :   |   | |  | | 
+.   \  ' .\    ," .--.; |  |  | '.'|'   ; :__ |  |  ' | : ," .--.; |         '   ; |:  ||   :    |`---'     '  : |__ |   | |  |/  
+ \   \   ' \ |/  /  ,.  |  ;  :    ;'   | '.'||  :  :_:,'/  /  ,.  |         |   | '/  ' \   \  /           |  | '.'||   | |--'   
+  \   \  |--";  :   .'   \ |  ,   / |   :    :|  | ,'   ;  :   .'   \        |   :    :|  `----'            ;  :    ;|   |/       
+   \   \ |   |  ,     .-./  ---`-'   \   \  / `--''     |  ,     .-./         \   \  /                      |  ,   / '---'        
+    '---"     `--`---'                `----'             `--`---'              `----'                        ---`-'               
+                                                                                                                                  """
 
-user_input = input("\n What kind of events are you looking for? ")
-print("\n[1/4] Analyzing user intent...")
-
+print(title)
+print("*" * 60)
+print("There's a hundred and four days of summer vacation ⋆｡♬ﾟ\n")
+print("And school comes along just to end it ₊˚♬ﾟ\n")
+print("So the annual problem for our generation ｡♪♫ ₊\n")
+print("Is finding a good way to spend it ｡♪♫ ₊\n")
+print("Like maybeee ♪♫ ₊˚...")
+print("*" * 60)
+print("Don't stress about strict keywords, dates, or locations!")
+print("Just type what you're in the mood for naturally, and WATCHA DO-IN")
+print("will figure out exactly what to look for.")
+print("Example: 'I want to go dancing in NYC this weekend'")
+print("-" * 60)
 
 genai_key = os.getenv('GENAI_KEY')
 genai.api_key = genai_key
@@ -43,79 +66,115 @@ genai.api_key = genai_key
 client = genai.Client(
     api_key=genai_key,
 )
-
-response = client.models.generate_content(
-    model="gemini-2.5-flash",
-        config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=EventSearch.model_json_schema()
-    ),
-    contents=user_input,
-)
-
-events = response.text
-search_terms = json.loads(events)
-google_query = search_terms['google_events']['q']
-google_loc = search_terms['google_events']['location']
-combined_query = f"{google_query} in {google_loc}"
-
-print(f"\n ↳ Translated into Search Query: {combined_query}")
-print("[2/4] Fetching live data from Google Events API")
-
-#print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
-#print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
-#print(f"Google Events Query: {search_terms['google_events']['q']}")
-
-google_events = fetch_google_events(combined_query)
-print(f"Found {len(google_events)} events!")
-print("[3/4] Normalizing data and caching to DB...")
-
 engine = db.create_engine('sqlite:///events.db')
-normalize_and_save(google_events, 'google', engine)
 
-print("[4/4] Here are your personalized results!")
-print("=" * 60)
+while True:
+    
+  user_input = input("\n What kind of events are you looking for? (or type 'q' to exit) ")
 
-with engine.connect() as connection:
-    query_result = connection.execute(db.text("SELECT * FROM events;")).fetchall()
-    df = pd.DataFrame(query_result)
+  if user_input.lower() == "q":
+    print("\nThanks for using WATCHA DO-IN!")
+    break
 
-    if df.empty:
-      print("No events matched your search. Try another prompt!")
-    else:
-      for index, row in df.iterrows():
-        date_info = str(row['date'])
-        try:
-          date_dict = ast.literal_eval(date_info)
-          if isinstance(date_dict, dict):
-            date_info = date_dict.get('when', date_info)
-        except (ValueError, SyntaxError):
-          pass
+  print("\n[1/4] Analyzing user intent...")
 
-        print(f" EVENT: {row['title']}")
-        print(f" WHEN:  {date_info}")
-        print(f" WHERE: {row['address']}")
-        print("-" * 60)
+  try:
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+            config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=EventSearch.model_json_schema()
+        ),
+        contents=user_input,
+    )
 
-print(f"Ticketmaster Keyword: {search_terms['ticketmaster']['keyword']}")
-print(f"Ticketmaster City: {search_terms['ticketmaster']['city']}")
-print(f"Google Events Query: {search_terms['google_events']['q']}")
+    events = response.text
+    search_terms = json.loads(events)
+  except Exception as e:
+    print("Gemini is experiencing usage spikes. Switching to fallback demo mode.")
 
-ticketmaster_keywords = search_terms["ticketmaster"]["keyword"]
-ticketmaster_city = search_terms["ticketmaster"]["city"]
+    search_terms = {
+        "google_events": {
+            "q": "dancing in NYC",
+            "location": "New York"
+        },
+        "ticketmaster": {
+            "keyword": ["dance"],
+            "classificationName": "Music",
+            "city": "New York",
+            "stateCode": "NY",
+            "localStartDateTime": []
+        }
+    }
 
-ticketmaster_results = get_events(
-  ticketmaster_keywords[0],
-  ticketmaster_city
-)
-if ticketmaster_results and "_embedded" in ticketmaster_results:
-  for event in ticketmaster_results["_embedded"]["events"]:
-    print(f"Name: {event['name']}")
-    print(f"Date: {event['dates']['start'].get('localDate', 'N/A')}")
-    print(f"Venue: {event['_embedded']['venues'][0]['names']}")
-    print(f"City: {event['_embedded']['venues'][0]['city']['name']}")
-    print(f"URL: {event['url']}")
-else:
-  print("No Ticketmaster events found")
-  
-print("Thanks for using WATCHA DO-IN")
+  google_query = search_terms['google_events']['q']
+  google_loc = search_terms['google_events']['location']
+
+  tm_keywords = search_terms["ticketmaster"]["keyword"]
+  tm_keyword = tm_keywords[0] if tm_keywords else "music"
+  tm_city = search_terms["ticketmaster"]["city"]
+
+  print(f"\n ↳ Translated into Google Events Query: {google_query}")
+  print(f"\n ↳ Translated into Ticketmaster Query: {tm_keyword}")
+  print("\n[2/4] Checking local cache for previous searches...")
+
+  search_term_lower = google_query.lower()
+  df = pd.DataFrame()
+
+  with engine.connect() as connection:
+    tables = db.inspect(engine).get_table_names()
+
+    if 'events' in tables:
+      query = db.text("SELECT * FROM events WHERE search_term = :term")
+      result = connection.execute(query, {"term": search_term_lower}).fetchall()
+
+      if result:
+        df = pd.DataFrame(result)
+
+  if not df.empty:
+    print(f"Found {len(df)} saved events! Skipping APIs...")
+    print("[3/4] Skipping Normalization")
+  else:
+    google_events = fetch_google_events(google_query)
+    tm_response = get_events(tm_keyword, tm_city)
+    tm_events = tm_response.get('_embedded', {}).get('events', []) if tm_response else []
+
+    print(f"Found {len(google_events)} Google events and {len(tm_events)} Ticketmaster events!")
+    print("[3/4] Normalizing data and caching to DB...")
+
+    normalize_and_save(google_events, 'google', engine, google_query)
+    normalize_and_save(tm_events, 'ticketmaster', engine, google_query)
+
+    print("[4/4] Here are your personalized results!")
+    print("=" * 60)
+
+    with engine.connect() as connection:
+      tables = db.inspect(engine).get_table_names()
+
+      if 'events' in tables:
+        query = db.text("SELECT * FROM events WHERE search_term = :term")
+        query_result = connection.execute(query, {"term": search_term_lower}).fetchall()
+        df = pd.DataFrame(query_result)
+
+  if df.empty:
+    print("No events matched your search. Try another prompt!")
+  else:
+    for index, row in df.iterrows():
+      date_info = str(row['date'])
+      try:
+        date_dict = ast.literal_eval(date_info)
+        if isinstance(date_dict, dict):
+          date_info = date_dict.get('when', date_info)
+      except (ValueError, SyntaxError):
+        pass
+
+      print(f" EVENT: {row['title']}")
+      print(f" WHEN:  {date_info}")
+      print(f" WHERE: {row['address']}")
+      print(f" LINK: {row.get('link', 'N/A')}")
+      print("-" * 60)
+    
+  cont = input("\n Would you like to search for something else? (y/n)")
+  if cont.lower() != "y":
+    print("\nThanks for using WATCHA DO-IN!!\n")
+    break

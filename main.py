@@ -99,7 +99,7 @@ while True:
 
   print(f"\n ↳ Translated into Google Events Query: {google_query}")
   print(f"\n ↳ Translated into Ticketmaster Query: {tm_keyword}")
-  print("[2/4] Checking local cache for previous searches...")
+  print("\n[2/4] Checking local cache for previous searches...")
 
   search_term_lower = google_query.lower()
   df = pd.DataFrame()
@@ -147,11 +147,11 @@ while True:
       except (ValueError, SyntaxError):
         pass
 
-    print(f" EVENT: {row['title']}")
-    print(f" WHEN:  {date_info}")
-    print(f" WHERE: {row['address']}")
-    print(f" LINK: {row.get('url', 'N/A')}")
-    print("-" * 60)
+      print(f" EVENT: {row['title']}")
+      print(f" WHEN:  {date_info}")
+      print(f" WHERE: {row['address']}")
+      print(f" LINK: {row.get('link', 'N/A')}")
+      print("-" * 60)
     
   cont = input("\n Would you like to search for something else? (y/n)")
   if cont.lower() != "y":
